@@ -122,11 +122,10 @@ function ShellContent({ children }: { children: ReactNode }) {
           <div className="flex h-20 items-center justify-between gap-4 px-4 md:h-24 md:px-8">
             <div className="flex items-center gap-4">
               <div className="md:hidden">
-                <BrandMark compact />
+                <img src="/logoC.png" alt="Cobrofy" className="h-10 w-10" />
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-400">Cobrofy</p>
-                <h1 className="text-xl font-semibold md:text-2xl">{activeItem?.label || "Panel"}</h1>
+                <p className="text-xl font-medium uppercase tracking-[0.2em] text-emerald-400">obrofy</p>
               </div>
             </div>
             <div className="hidden items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 sm:flex">

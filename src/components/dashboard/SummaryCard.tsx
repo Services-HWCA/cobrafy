@@ -24,8 +24,8 @@ const valueStyles = {
 export function SummaryCard({ label, value, detail, tone = "default" }: SummaryCardProps) {
   return (
     <div className={`rounded-2xl border p-4 shadow-lg shadow-black/30 backdrop-blur md:rounded-3xl md:p-5 ${toneStyles[tone]}`}>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 md:text-xs">{label}</p>
-      <p className={`mt-2 text-xl font-bold md:mt-3 md:text-3xl ${valueStyles[tone]}`}>{value}</p>
+      <p className="line-clamp-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 md:text-xs">{label}</p>
+      <p className={`mt-2 truncate text-lg font-bold md:mt-3 md:text-3xl ${valueStyles[tone]}`}>{value}</p>
       {detail && <p className="mt-2 text-xs text-zinc-500">{detail}</p>}
     </div>
   );
