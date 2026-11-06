@@ -3,7 +3,7 @@
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase/client";
-import { ensureUserProfile, getUserProfile } from "@/lib/services/auth.service";
+import { ensureAuthPersistence, enforceSessionExpiry, ensureUserProfile, getUserProfile } from "@/lib/services/auth.service";
 import type { UserProfile } from "@/types";
 
 interface AuthContextValue {
@@ -30,26 +30,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (nextUser) => {
-      setUser(nextUser);
-      if (!nextUser) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
 
-      try {
-        const existing = await getUserProfile(nextUser.uid);
-        const resolved = existing || (await ensureUserProfile(nextUser));
-        setProfile(resolved);
-      } catch {
-        setProfile(null);
-      } finally {
-        setLoading(false);
-      }
-    });
+    ensureAuthPersistence()
+      .catch(() => undefined)
+      .then(() => {
+        if (cancelled) return;
+        unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (nextUser) => {
+          if (nextUser) {
+            const expired = await enforceSessionExpiry().catch(() => false);
+            if (expired) {
+              setUser(null);
+              setProfile(null);
+              setLoading(false);
+              return;
+            }
+          }
+          setUser(nextUser);
+          if (!nextUser) {
+            setProfile(null);
+            setLoading(false);
+            return;
+          }
 
-    return unsubscribe;
+          try {
+            const existing = await getUserProfile(nextUser.uid);
+            const resolved = existing || (await ensureUserProfile(nextUser));
+            setProfile(resolved);
+          } catch {
+            setProfile(null);
+          } finally {
+            setLoading(false);
+          }
+        });
+      });
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, []);
 
   const value = useMemo(

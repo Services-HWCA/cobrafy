@@ -2,7 +2,7 @@ interface SummaryCardProps {
   label: string;
   value: string;
   detail?: string;
-  tone?: "default" | "success" | "warning" | "info";
+  tone?: "default" | "success" | "warning" | "info" | "danger";
 }
 
 const toneStyles = {
@@ -10,6 +10,7 @@ const toneStyles = {
   success: "border-emerald-400/30 bg-emerald-400/10",
   warning: "border-amber-400/30 bg-amber-400/10",
   info: "border-sky-400/30 bg-sky-400/10",
+  danger: "border-red-400/30 bg-red-400/10",
 } as const;
 
 const valueStyles = {
@@ -17,6 +18,7 @@ const valueStyles = {
   success: "text-emerald-300",
   warning: "text-amber-300",
   info: "text-sky-300",
+  danger: "text-red-300",
 } as const;
 
 export function SummaryCard({ label, value, detail, tone = "default" }: SummaryCardProps) {

@@ -33,7 +33,10 @@ export function PaymentHistory({ payments, onVoid }: PaymentHistoryProps) {
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-semibold">{payment.clientName || "Cliente"}</p>
+                <p className="font-semibold">
+                  {payment.clientName || "Cliente"}
+                  {payment.debtLabel ? <span className="ml-2 text-xs font-medium text-zinc-500">· {payment.debtLabel}</span> : null}
+                </p>
                 <p className="mt-1 text-sm text-zinc-500">{formatDateTime(payment.date)}</p>
                 {payment.note && <p className="mt-2 text-sm leading-6 text-zinc-400">{payment.note}</p>}
                 {voided && payment.voidReason && (

@@ -40,9 +40,8 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-emerald-400/20 blur-3xl" />
       <div className="relative">
         <div className="mb-8 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-400 text-2xl font-black text-black shadow-lg shadow-emerald-500/30">
-            C
-          </div>
+          <img src="/logoC.png" alt="Cobrofy" className="h-14 w-14" />
+
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.25em] text-emerald-400">Cobrofy</p>
             <h1 className="mt-1 text-3xl font-semibold">Iniciar sesión</h1>

@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { formatCurrencyDefault, parseAmountToCents } from "@/lib/utils/currency";
-import type { Client } from "@/types";
+import type { Client, Debt } from "@/types";
 
 export interface PaymentFormValues {
+  debtId: string;
   amount: number;
   date: string;
   note: string;
@@ -12,6 +13,7 @@ export interface PaymentFormValues {
 
 interface PaymentFormProps {
   client: Client;
+  debts: Debt[];
   loading?: boolean;
   error?: string;
   onSubmit: (values: PaymentFormValues) => void;
@@ -24,12 +26,16 @@ function todayInputValue() {
   return new Date(date.getTime() - offset).toISOString().slice(0, 10);
 }
 
-export function PaymentForm({ client, loading = false, error = "", onSubmit, onCancel }: PaymentFormProps) {
+export function PaymentForm({ client, debts, loading = false, error = "", onSubmit, onCancel }: PaymentFormProps) {
+  const payableDebts = debts.filter((debt) => debt.status !== "settled" && debt.outstandingBalance > 0);
+  const [debtId, setDebtId] = useState(payableDebts[0]?.id || "");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(todayInputValue());
   const [note, setNote] = useState("");
   const [validationError, setValidationError] = useState("");
   const submitLock = useRef(false);
+
+  const selectedDebt = payableDebts.find((debt) => debt.id === debtId) || payableDebts[0] || null;
 
   useEffect(() => {
     if (!loading) submitLock.current = false;
@@ -37,7 +43,7 @@ export function PaymentForm({ client, loading = false, error = "", onSubmit, onC
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (loading || submitLock.current) return;
+    if (loading || submitLock.current || !selectedDebt) return;
     setValidationError("");
 
     const amountCents = parseAmountToCents(amount);
@@ -45,8 +51,8 @@ export function PaymentForm({ client, loading = false, error = "", onSubmit, onC
       setValidationError("Ingresa un monto válido mayor a cero.");
       return;
     }
-    if (amountCents > client.balance) {
-      setValidationError(`El monto no puede superar el saldo pendiente de ${formatCurrencyDefault(client.balance)}.`);
+    if (amountCents > selectedDebt.outstandingBalance) {
+      setValidationError(`El monto no puede superar el saldo pendiente de ${formatCurrencyDefault(selectedDebt.outstandingBalance)}.`);
       return;
     }
     if (!date) {
@@ -55,19 +61,37 @@ export function PaymentForm({ client, loading = false, error = "", onSubmit, onC
     }
 
     submitLock.current = true;
-    onSubmit({ amount: amountCents, date, note });
+    onSubmit({ debtId: selectedDebt.id, amount: amountCents, date, note });
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {payableDebts.length > 1 && (
+        <div>
+          <label htmlFor="payment-debt" className="mb-1 block text-sm font-medium">Deuda</label>
+          <select
+            id="payment-debt"
+            value={selectedDebt?.id || ""}
+            onChange={(event) => setDebtId(event.target.value)}
+            className="w-full rounded-2xl border border-white/10 bg-black/60 px-4 py-3.5 text-sm text-white outline-none transition focus:border-emerald-400/70 focus:ring-4 focus:ring-emerald-400/10 [color-scheme:dark]"
+          >
+            {payableDebts.map((debt) => (
+              <option key={debt.id} value={debt.id}>
+                {debt.label} · saldo {formatCurrencyDefault(debt.outstandingBalance)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
         <div className="flex justify-between">
-          <span className="text-zinc-500">Saldo pendiente</span>
-          <span className="font-semibold">{formatCurrencyDefault(client.balance)}</span>
+          <span className="text-zinc-500">Saldo pendiente{selectedDebt ? ` (${selectedDebt.label})` : ""}</span>
+          <span className="font-semibold">{formatCurrencyDefault(selectedDebt?.outstandingBalance ?? client.balance)}</span>
         </div>
         <div className="mt-1 flex justify-between">
-          <span className="text-zinc-500">Deuda inicial</span>
-          <span>{formatCurrencyDefault(client.initialDebt)}</span>
+          <span className="text-zinc-500">Cobro inicial</span>
+          <span>{formatCurrencyDefault(selectedDebt?.initialAmount ?? client.initialDebt)}</span>
         </div>
       </div>
 
@@ -76,7 +100,7 @@ export function PaymentForm({ client, loading = false, error = "", onSubmit, onC
           <label htmlFor="payment-amount" className="text-sm font-medium">Monto recibido</label>
           <button
             type="button"
-            onClick={() => setAmount((client.balance / 100).toFixed(2))}
+            onClick={() => selectedDebt && setAmount((selectedDebt.outstandingBalance / 100).toFixed(2))}
             className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400"
           >
             Completar saldo
@@ -131,7 +155,7 @@ export function PaymentForm({ client, loading = false, error = "", onSubmit, onC
         </button>
         <button
           type="submit"
-          disabled={loading || submitLock.current}
+          disabled={loading || !selectedDebt}
           className="flex-1 rounded-2xl bg-emerald-400 px-4 py-3.5 text-sm font-bold text-black transition hover:bg-emerald-300 disabled:opacity-60"
         >
           {loading ? "Registrando..." : "Registrar abono"}

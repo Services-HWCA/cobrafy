@@ -1,9 +1,11 @@
 import {
+  browserLocalPersistence,
   createUserWithEmailAndPassword,
   EmailAuthProvider,
   fetchSignInMethodsForEmail,
   reauthenticateWithCredential,
   sendPasswordResetEmail,
+  setPersistence,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updatePassword,
@@ -20,9 +22,41 @@ function assertConfigured() {
   }
 }
 
+const SESSION_STARTED_KEY = "cobrafy:sessionStartedAt";
+const SESSION_MAX_AGE_MS = 4 * 24 * 60 * 60 * 1000;
+
+export function markSessionStarted() {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(SESSION_STARTED_KEY, String(Date.now()));
+}
+
+export function clearSessionMarker() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(SESSION_STARTED_KEY);
+}
+
+export async function ensureAuthPersistence() {
+  assertConfigured();
+  await setPersistence(getFirebaseAuth(), browserLocalPersistence);
+}
+
+export async function enforceSessionExpiry(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const startedAt = Number(window.localStorage.getItem(SESSION_STARTED_KEY) || 0);
+  if (!startedAt) {
+    markSessionStarted();
+    return false;
+  }
+  if (Date.now() - startedAt <= SESSION_MAX_AGE_MS) return false;
+  clearSessionMarker();
+  await firebaseSignOut(getFirebaseAuth());
+  return true;
+}
+
 export async function signIn(email: string, password: string) {
   assertConfigured();
   const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
+  markSessionStarted();
   await ensureUserProfile(credential.user);
   return credential.user;
 }
@@ -30,6 +64,7 @@ export async function signIn(email: string, password: string) {
 export async function createAccount(name: string, email: string, password: string) {
   assertConfigured();
   const credential = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
+  markSessionStarted();
   await updateProfile(credential.user, { displayName: name });
   await ensureUserProfile(credential.user, name);
   return credential.user;
@@ -47,6 +82,7 @@ export async function sendAccessEmail(email: string) {
 
 export async function signOut() {
   assertConfigured();
+  clearSessionMarker();
   await firebaseSignOut(getFirebaseAuth());
 }
 

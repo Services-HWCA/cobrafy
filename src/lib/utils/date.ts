@@ -33,3 +33,12 @@ export function formatDateTime(value: Timestamp | Date | string | null | undefin
     minute: "2-digit",
   }).format(date);
 }
+
+export function formatTime(value: Timestamp | Date | string | null | undefined): string {
+  const date = toDate(value);
+  if (!date) return "—";
+  return new Intl.DateTimeFormat("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}

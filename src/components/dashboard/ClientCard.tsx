@@ -19,10 +19,10 @@ export function ClientCard({ client }: { client: Client }) {
       className="group block rounded-2xl border border-white/10 bg-zinc-950/70 p-4 shadow-sm backdrop-blur transition hover:border-emerald-400/40 hover:bg-zinc-900/80"
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="truncate font-semibold">{client.name}</h3>
-            <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${statusClass}`}>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-2">
+            <h3 className="line-clamp-2 text-sm font-semibold leading-tight">{client.name}</h3>
+            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${statusClass}`}>
               {statusLabel}
             </span>
           </div>

@@ -79,8 +79,9 @@ function ShellContent({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-black text-white">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-white/10 bg-zinc-950/80 backdrop-blur-xl md:flex">
-        <div className="border-b border-white/10 px-6 py-6">
-          <BrandMark />
+        <div className="border-b border-white/10 px-6 py-6 flex items-center">
+          <img src="/logoC.png" alt="Cobrofy" className="h-14 w-14" />
+          <p className="mt-2 text-3xl font-medium uppercase tracking-[0.25em] text-emerald-400">obrofy</p>
         </div>
         <nav className="flex-1 space-y-2 p-4">
           {navItems.map((item) => {

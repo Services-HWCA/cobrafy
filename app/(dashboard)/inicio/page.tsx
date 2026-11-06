@@ -10,6 +10,7 @@ import { ClientForm, type ClientFormValues } from "@/components/clients/ClientFo
 import { Modal } from "@/components/ui/Modal";
 import { createClient, listClients } from "@/lib/services/client.service";
 import { listAllPayments } from "@/lib/services/payment.service";
+import { calculateDebtMetrics } from "@/lib/services/metrics.service";
 import { formatCurrencyDefault } from "@/lib/utils/currency";
 import type { Client, Payment } from "@/types";
 
@@ -19,6 +20,13 @@ export default function InicioPage() {
   const { user, profile } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [debtMetrics, setDebtMetrics] = useState({
+    overdueDebts: 0,
+    overdueBalance: 0,
+    totalAccruedInterest: 0,
+    upcomingDueDebts: 0,
+    overdueClients: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [paymentsError, setPaymentsError] = useState("");
@@ -42,6 +50,13 @@ export default function InicioPage() {
       } catch {
         setPayments([]);
         setPaymentsError("No se pudieron cargar los últimos abonos.");
+      }
+
+      try {
+        const metrics = await calculateDebtMetrics(user.uid);
+        setDebtMetrics(metrics);
+      } catch {
+        // Silencioso: si falla, no mostramos métricas
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudieron cargar los datos.");
@@ -108,11 +123,26 @@ export default function InicioPage() {
 
       {error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{error}</p>}
 
-      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <section className="grid grid-cols-3 gap-3 xl:grid-cols-5">
         <SummaryCard label="Por cobrar" value={formatCurrencyDefault(totals.pending)} tone="warning" />
         <SummaryCard label="Recaudado" value={formatCurrencyDefault(totals.collected)} tone="success" />
         <SummaryCard label="Clientes activos" value={String(totals.activeCount)} />
         <SummaryCard label="Deudas saldadas" value={String(totals.settledCount)} />
+        {debtMetrics.overdueDebts > 0 && (
+          <SummaryCard label="Deudas vencidas" value={String(debtMetrics.overdueDebts)} tone="danger" />
+        )}
+        {debtMetrics.overdueBalance > 0 && (
+          <SummaryCard label="Mora pendiente" value={formatCurrencyDefault(debtMetrics.overdueBalance)} tone="danger" />
+        )}
+        {debtMetrics.totalAccruedInterest > 0 && (
+          <SummaryCard label="Intereses aplicados" value={formatCurrencyDefault(debtMetrics.totalAccruedInterest)} tone="warning" />
+        )}
+        {debtMetrics.upcomingDueDebts > 0 && (
+          <SummaryCard label="Próximos vencimientos" value={String(debtMetrics.upcomingDueDebts)} tone="info" />
+        )}
+        {debtMetrics.overdueClients > 0 && (
+          <SummaryCard label="Clientes en mora" value={String(debtMetrics.overdueClients)} tone="danger" />
+        )}
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">

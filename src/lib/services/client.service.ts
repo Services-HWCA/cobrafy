@@ -6,6 +6,7 @@ import {
   getDocs,
   serverTimestamp,
   updateDoc,
+  writeBatch,
   type DocumentData,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase/client";
@@ -15,7 +16,7 @@ function clientsCollection(uid: string) {
   return collection(getFirebaseDb(), "users", uid, "clients");
 }
 
-function clientDoc(uid: string, clientId: string) {
+export function clientDoc(uid: string, clientId: string) {
   return doc(getFirebaseDb(), "users", uid, "clients", clientId);
 }
 

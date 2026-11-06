@@ -18,6 +18,20 @@ service cloud.firestore {
         && data.status in ['active', 'settled', 'archived'];
     }
 
+    function validDebtData(data) {
+      return data.clientId is string && data.clientId.size() > 0
+        && data.label is string && data.label.size() > 0 && data.label.size() <= 120
+        && isMoney(data.initialAmount) && isMoney(data.principalPaid) && isMoney(data.accruedInterest) && isMoney(data.outstandingBalance)
+        && data.outstandingBalance == data.initialAmount - data.principalPaid + data.accruedInterest
+        && data.status in ['onTime', 'dueSoon', 'overdue', 'settled']
+        && data.interest is map
+        && data.interest.enabled is bool
+        && data.interest.rate is number && data.interest.rate >= 0
+        && data.interest.frequency in ['monthly', 'weekly', 'daily']
+        && data.interest.calculation in ['simple', 'compound']
+        && data.interest.graceDays is number && data.interest.graceDays >= 0;
+    }
+
     match /users/{uid} {
       allow read, write: if false;
 
@@ -41,19 +55,53 @@ service cloud.firestore {
         allow update: if isOwner(uid)
           && validClientData(request.resource.data)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'name', 'phone', 'description', 'totalPaid', 'balance', 'status', 'updatedAt'
+            'name', 'phone', 'description', 'initialDebt', 'totalPaid', 'balance', 'status', 'updatedAt'
           ]);
         allow delete: if false;
+
+        match /debts/{debtId} {
+          allow read: if isOwner(uid);
+          allow create: if isOwner(uid)
+            && validDebtData(request.resource.data)
+            && request.resource.data.clientId == clientId;
+          allow update: if isOwner(uid)
+            && validDebtData(request.resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'principalPaid', 'accruedInterest', 'outstandingBalance', 'status', 'updatedAt'
+            ]);
+          allow delete: if false;
+
+          match /interestEntries/{entryId} {
+            allow read: if isOwner(uid);
+            allow create: if isOwner(uid)
+              && request.resource.data.keys().hasOnly([
+                'debtId', 'amount', 'rate', 'periodStart', 'periodEnd', 'appliedAt', 'calculationType'
+              ])
+              && request.resource.data.debtId == debtId
+              && request.resource.data.amount is int && request.resource.data.amount > 0
+              && request.resource.data.rate is number && request.resource.data.rate >= 0
+              && request.resource.data.periodStart is string
+              && request.resource.data.periodEnd is string
+              && request.resource.data.appliedAt is timestamp
+              && request.resource.data.calculationType in ['simple', 'compound'];
+            allow update, delete: if false;
+          }
+        }
 
         match /payments/{paymentId} {
           allow read: if isOwner(uid);
           allow create: if isOwner(uid)
             && request.resource.data.keys().hasOnly([
-              'clientId', 'clientName', 'amount', 'date', 'note', 'status',
+              'clientId', 'clientName', 'debtId', 'debtLabel', 'amount', 'date', 'note', 'status',
               'createdAt', 'voidedAt', 'voidReason'
             ])
             && request.resource.data.clientId == clientId
             && request.resource.data.clientName is string
+            && request.resource.data.debtId is string
+            && request.resource.data.debtId.size() > 0
+            && request.resource.data.debtId.size() <= 100
+            && request.resource.data.debtLabel is string
+            && request.resource.data.debtLabel.size() <= 120
             && request.resource.data.amount is int && request.resource.data.amount > 0
             && request.resource.data.date is timestamp
             && request.resource.data.note is string && request.resource.data.note.size() <= 500

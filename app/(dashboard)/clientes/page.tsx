@@ -11,6 +11,7 @@ import {
   setClientArchived,
   updateClient,
 } from "@/lib/services/client.service";
+import { createDebt } from "@/lib/services/debt.service";
 import { formatCurrencyDefault } from "@/lib/utils/currency";
 import type { Client } from "@/types";
 
@@ -79,7 +80,19 @@ export default function ClientesPage() {
       if (editingClient) {
         await updateClient(user.uid, editingClient.id, values);
       } else {
-        await createClient(user.uid, values);
+        const clientId = await createClient(user.uid, values);
+        if (values.initialDebt > 0) {
+          await createDebt(user.uid, clientId, {
+            label: "Deuda inicial",
+            amount: values.initialDebt,
+            dueDate: values.dueDate,
+            interestEnabled: values.interestEnabled,
+            interestRate: values.interestRate,
+            interestFrequency: values.interestFrequency,
+            interestCalculation: values.interestCalculation,
+            graceDays: values.graceDays,
+          });
+        }
       }
       setModalOpen(false);
       await loadClients();
