@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LoginPage from "./(auth)/login/page";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { AuthProvider, useAuth } from "@/components/auth/AuthProvider";
 
-export default function Home() {
+function HomeContent() {
   const { user } = useAuth();
   const router = useRouter();
 
@@ -26,5 +26,13 @@ export default function Home() {
         <LoginPage />
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <AuthProvider>
+      <HomeContent />
+    </AuthProvider>
   );
 }
