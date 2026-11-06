@@ -98,9 +98,14 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-zinc-400">
           ¿Tu cuenta aún no tiene acceso?{" "}
-          <Link href="/register" className="font-semibold text-emerald-300 underline underline-offset-4">
+          <a
+            href="https://wa.me/5930963328168"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-emerald-300 underline underline-offset-4"
+          >
             Actívala aquí
-          </Link>
+          </a>
         </p>
       </div>
     </div>
