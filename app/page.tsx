@@ -6,22 +6,14 @@ import LoginPage from "./(auth)/login/page";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (user) {
       router.replace("/inicio");
     }
-  }, [user, loading, router]);
-
-  if (loading) {
-    return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4 py-10">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-800 border-t-emerald-400" />
-      </main>
-    );
-  }
+  }, [user, router]);
 
   if (user) {
     return null;
