@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AuthProvider, useAuth } from "@/components/auth/AuthProvider";
 import { NavIcon } from "@/components/layout/NavIcon";
+import { signOut } from "@/lib/services/auth.service";
 
 const navItems = [
   { href: "/inicio", label: "Inicio", icon: "inicio" as const },
@@ -37,6 +38,7 @@ function ShellContent({ children }: { children: ReactNode }) {
   const { user, profile, loading, configured } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && configured && !user) {
@@ -75,6 +77,11 @@ function ShellContent({ children }: { children: ReactNode }) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  async function handleSignOut() {
+    await signOut();
+    router.replace("/");
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -120,7 +127,7 @@ function ShellContent({ children }: { children: ReactNode }) {
       <div className="md:pl-72">
         <header className="sticky top-0 z-20 border-b border-white/10 bg-black/80 backdrop-blur-xl">
           <div className="flex h-20 items-center justify-between gap-4 px-4 md:h-24 md:px-8">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-3">
               <div className="md:hidden">
                 <img src="/logoC.png" alt="Cobrofy" className="h-10 w-10" />
               </div>
@@ -128,13 +135,42 @@ function ShellContent({ children }: { children: ReactNode }) {
                 <p className="text-xl font-medium uppercase tracking-[0.2em] text-emerald-400">obrofy</p>
               </div>
             </div>
-            <div className="hidden items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 sm:flex">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400 text-sm font-bold text-black">
-                {initials}
+            <div className="flex items-center gap-3">
+              <div className="hidden items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 sm:flex">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400 text-sm font-bold text-black">
+                  {initials}
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium leading-none">{displayName}</p>
+                  <p className="mt-1 text-xs text-zinc-500">{user.email}</p>
+                </div>
               </div>
-              <div className="text-left">
-                <p className="text-sm font-medium leading-none">{displayName}</p>
-                <p className="mt-1 text-xs text-zinc-500">{user.email}</p>
+              <div className="relative md:hidden">
+                <button
+                  type="button"
+                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-400 text-sm font-bold text-black"
+                >
+                  {initials}
+                </button>
+                {profileMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl border border-white/10 bg-zinc-950 p-2 shadow-2xl">
+                    <Link
+                      href="/configuracion"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="block rounded-xl px-4 py-3 text-sm font-medium text-zinc-300 transition hover:bg-white/5 hover:text-white"
+                    >
+                      Ajustes
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="block w-full rounded-xl px-4 py-3 text-left text-sm font-medium text-red-300 transition hover:bg-white/5 hover:text-red-200"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
