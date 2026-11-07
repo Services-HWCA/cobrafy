@@ -125,7 +125,7 @@ export default function InicioPage() {
 
       <section className="grid grid-cols-3 gap-3 xl:grid-cols-5">
         <SummaryCard label="Por cobrar" value={formatCurrencyDefault(totals.pending)} tone="warning" />
-        <SummaryCard label="Recaudado" value={formatCurrencyDefault(totals.collected)} tone="success" />
+        <SummaryCard label="Total Recaudado" value={formatCurrencyDefault(totals.collected)} tone="success" />
         <SummaryCard label="Clientes activos" value={String(totals.activeCount)} />
         <SummaryCard label="Deudas saldadas" value={String(totals.settledCount)} />
         {debtMetrics.overdueDebts > 0 && (
