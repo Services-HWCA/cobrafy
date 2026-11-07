@@ -132,7 +132,7 @@ function ShellContent({ children }: { children: ReactNode }) {
                 <img src="/logoC.png" alt="Cobrofy" className="h-10 w-10" />
               </div>
               <div>
-                <p className="text-xl font-medium uppercase tracking-[0.2em] text-emerald-400">obrofy</p>
+                <p className="text-xl font-medium uppercase text-emerald-400">obrofy</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
